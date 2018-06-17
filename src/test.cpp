@@ -16,6 +16,9 @@ int main()
 {
 
   typedef Fr<default_r1cs_ppzksnark_pp> FieldT;
+
+  // Initialize the curve parameters.
+  default_r1cs_ppzksnark_pp::init_public_params();
   
   // Create protoboard
 
@@ -24,19 +27,26 @@ int main()
   // Define variables
 
   pb_variable<FieldT> x;
-  pb_variable<FieldT> out;
   pb_variable<FieldT> sym_1;
   pb_variable<FieldT> y;
   pb_variable<FieldT> sym_2;
+  pb_variable<FieldT> out;
 
   // Allocate variables to protoboard
   // The strings (like "x") are only for debugging purposes
   
-  x.allocate(pb, "x");
   out.allocate(pb, "out");
+  x.allocate(pb, "x");
   sym_1.allocate(pb, "sym_1");
   y.allocate(pb, "y");
   sym_2.allocate(pb, "sym_2");
+
+  // This sets up the protoboard variables
+  // so that the first one (out) represents the public
+  // input and the rest is private input
+  pb.set_input_sizes(1);
+
+  cout << "Number of variables: " << pb.num_variables() << endl;
 
   // Add R1CS constraints to protoboard
 
@@ -60,7 +70,6 @@ int main()
   pb.val(y) = 27;
   pb.val(sym_2) = 30;
 
-
   if (pb.is_satisfied()) {
     cout << "Constraint system is satisfied." << endl;
   }
@@ -68,28 +77,20 @@ int main()
     cout << "Constraint system is not satisfied." << endl;
   }
 
-  // This is not working for some reason
-  cout << "Value of x: " << pb.val(x) << endl;
-
   const r1cs_constraint_system<FieldT> constraint_system = pb.get_constraint_system();
   
   cout << "Number of R1CS constraints: " << constraint_system.num_constraints() << endl;
-  cout << "Number of variables: " << pb.num_variables() << endl;
-
-  // Initialize the curve parameters.
-  default_r1cs_ppzksnark_pp::init_public_params();
 
   r1cs_ppzksnark_keypair<default_r1cs_ppzksnark_pp> keypair = r1cs_ppzksnark_generator<default_r1cs_ppzksnark_pp>(constraint_system);
 
   r1cs_ppzksnark_proof<default_r1cs_ppzksnark_pp> proof = r1cs_ppzksnark_prover<default_r1cs_ppzksnark_pp>(keypair.pk, pb.primary_input(), pb.auxiliary_input());
-  
-  vector<FieldT> empty;
 
-  bool verified = r1cs_ppzksnark_verifier_strong_IC<default_r1cs_ppzksnark_pp>(keypair.vk, empty, proof);
+  bool verified = r1cs_ppzksnark_verifier_strong_IC<default_r1cs_ppzksnark_pp>(keypair.vk, pb.primary_input(), proof);
+
+  cout << "Primary (public) input: " << pb.primary_input() << endl;
+  cout << "Auxiliary (private) input: " << pb.auxiliary_input() << endl;
 
   cout << "Verification status: " << verified << endl;
-
-  cout << "made it here" << endl;
 
   return 0;
 }
