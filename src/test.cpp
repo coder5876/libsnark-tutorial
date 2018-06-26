@@ -139,6 +139,9 @@ int main()
   vk_data << gamma_beta_2.X << endl;
   vk_data << gamma_beta_2.Y << endl;
 
+  vk_data << Z.X << endl;
+  vk_data << Z.Y << endl;
+
   vk_data << IC_0.X << endl;
   vk_data << IC_0.Y << endl;
 
@@ -198,13 +201,12 @@ int main()
   proof_data << K.X << endl;
   proof_data << K.Y << endl;
 
+  proof_data.close();
+
   cout << "g_H: " << endl;
   G1<default_r1cs_ppzksnark_pp> copy(proof.g_H);
   copy.to_affine_coordinates();
   copy.X.as_bigint().print();
-
-  cout << "g_H hex: " << copy.X << endl;
-  //copy.X.as_bigint().print_hex();
 
   cout << "A: " << endl;
   keypair.vk.alphaA_g2.print();
@@ -213,7 +215,17 @@ int main()
   vk.encoded_IC_query.first.print();
   vk.encoded_IC_query.rest[0].print();
 
-  proof_data.close();
+  cout << "Should be same IC:" << endl;
+
+  cout << IC_0.X << endl;
+  cout << IC_0.Y << endl;
+
+  for(size_t i=0; i<IC.size(); i++) {
+    G1<default_r1cs_ppzksnark_pp> IC_N(IC.rest[i]);
+    IC_N.to_affine_coordinates();
+    cout << IC_N.X << endl;
+    cout << IC_N.Y << endl;
+  }
 
   return 0;
 }

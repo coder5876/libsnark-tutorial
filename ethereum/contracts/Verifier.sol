@@ -136,7 +136,7 @@ library Pairing {
 }
 contract Verifier {
     using Pairing for *;
-    bool verifyingKeySet = false;
+    bool public verifyingKeySet = false;
     struct VerifyingKey {
         Pairing.G2Point A;
         Pairing.G1Point B;
@@ -145,7 +145,8 @@ contract Verifier {
         Pairing.G1Point gammaBeta1;
         Pairing.G2Point gammaBeta2;
         Pairing.G2Point Z;
-        Pairing.G1Point[] IC;
+        Pairing.G1Point[5] IC;
+        uint IC_length;
     }
     VerifyingKey vk;
     struct Proof {
@@ -159,7 +160,7 @@ contract Verifier {
         Pairing.G1Point H;
     }
     function verify(uint[] input, Proof proof) internal returns (uint) {
-        require(input.length + 1 == vk.IC.length);
+        require(input.length + 1 == vk.IC_length);
         // Compute the linear combination vk_x
         Pairing.G1Point memory vk_x = Pairing.G1Point(0, 0);
         for (uint i = 0; i < input.length; i++)
@@ -188,7 +189,8 @@ contract Verifier {
             uint[2] gamma_beta_1,
             uint[2][2] gamma_beta_2,
             uint[2][2] Z,
-            uint[2][] IC) {
+            uint[2][] IC) public {
+        require(IC.length <= 5);
         vk.A = Pairing.G2Point([A[0][0], A[0][1]], [A[1][0], A[1][1]]);
         vk.B = Pairing.G1Point(B[0], B[1]);
         vk.C = Pairing.G2Point([C[0][0], C[0][1]], [C[1][0], C[1][1]]);
@@ -196,7 +198,8 @@ contract Verifier {
         vk.gammaBeta1 = Pairing.G1Point(gamma_beta_1[0], gamma_beta_1[1]);
         vk.gammaBeta2 = Pairing.G2Point([gamma_beta_2[0][0], gamma_beta_2[0][1]], [gamma_beta_2[1][0], gamma_beta_2[1][1]]);
         vk.Z = Pairing.G2Point([Z[0][0], Z[0][1]], [Z[1][0], Z[1][1]]);
-        for(uint i=0; i<IC.length; i++) {
+        vk.IC_length = IC.length;
+        for(uint i=0; i<vk.IC_length; i++) {
             vk.IC[i] = Pairing.G1Point(IC[i][0], IC[i][1]);
         }
         verifyingKeySet = true;
@@ -211,8 +214,7 @@ contract Verifier {
             uint[2] c_p,
             uint[2] h,
             uint[2] k,
-            uint[] input
-        ) returns (bool r) {
+            uint[] input) public returns (bool r) {
         require(verifyingKeySet);
         Proof memory proof;
         proof.A = Pairing.G1Point(a[0], a[1]);
