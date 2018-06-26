@@ -1,13 +1,10 @@
 #include <stdlib.h>
 #include <iostream>
-#include <boost/optional/optional_io.hpp>
 
-#include "algebra/fields/field_utils.hpp"
+#include "libff/algebra/fields/field_utils.hpp"
 #include "libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp"
 #include "libsnark/common/default_types/r1cs_ppzksnark_pp.hpp"
-#include "libsnark/common/utils.hpp"
 #include "libsnark/gadgetlib1/pb_variable.hpp"
-
 
 using namespace libsnark;
 using namespace std;
@@ -15,7 +12,7 @@ using namespace std;
 int main()
 {
 
-  typedef Fr<default_r1cs_ppzksnark_pp> FieldT;
+  typedef libff::Fr<default_r1cs_ppzksnark_pp> FieldT;
 
   // Initialize the curve parameters.
   default_r1cs_ppzksnark_pp::init_public_params();
