@@ -3,4 +3,5 @@ test
 *.d
 depinst
 depsrc
-
+proof_data
+vk_data
