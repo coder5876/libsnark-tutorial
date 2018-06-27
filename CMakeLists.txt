@@ -4,7 +4,7 @@ project(libsnark-tutorial)
 
 set(
   CURVE
-  "BN128"
+  "ALT_BN128"
   CACHE
   STRING
   "Default curve: one of ALT_BN128, BN128, EDWARDS, MNT4, MNT6"
