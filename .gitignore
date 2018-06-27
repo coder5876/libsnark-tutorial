@@ -1,7 +1,9 @@
 test
+!ethereum/test
 *.o
 *.d
 depinst
 depsrc
 proof_data
 vk_data
+ethereum/build
