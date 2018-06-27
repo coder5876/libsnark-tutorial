@@ -1,7 +1,2 @@
-test
-*.o
-*.d
-depinst
-depsrc
 *~
 build
