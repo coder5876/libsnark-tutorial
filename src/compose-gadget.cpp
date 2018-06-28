@@ -6,7 +6,7 @@
 #include "libsnark/common/default_types/r1cs_ppzksnark_pp.hpp"
 #include "libsnark/gadgetlib1/pb_variable.hpp"
 
-#include "gadget.hpp"
+#include "composed-gadget.hpp"
 #include "util.hpp"
 
 using namespace libsnark;
@@ -44,7 +44,7 @@ int main()
   
   // Add witness values
 
-  pb.val(out) = 35;
+  pb.val(out) = 35*35;
   pb.val(x) = 3;
 
   g.generate_r1cs_witness();

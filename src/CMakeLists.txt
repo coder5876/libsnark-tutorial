@@ -20,17 +20,17 @@ target_include_directories(
 )
 
 add_executable(
-  test-gadget
+  compose-gadget
 
-  test-gadget.cpp
+  compose-gadget.cpp
 )
 target_link_libraries(
-  test-gadget
+  compose-gadget
 
   snark
 )
 target_include_directories(
-  test-gadget
+  compose-gadget
 
   PUBLIC
   ${DEPENDS_DIR}/libsnark

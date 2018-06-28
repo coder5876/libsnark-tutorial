@@ -3,23 +3,23 @@
 using namespace libsnark;
 
 template<typename FieldT>
-class test_gadget : public gadget<FieldT> {
+class poly_gadget : public gadget<FieldT> {
 private:
   pb_variable<FieldT> sym_1;
   pb_variable<FieldT> y;
   pb_variable<FieldT> sym_2;
 public:
-  const pb_variable<FieldT> out;
-  const pb_variable<FieldT> x;
+  pb_variable<FieldT> out;
+  pb_variable<FieldT> x;
 
-  test_gadget(protoboard<FieldT> &pb,
-              const pb_variable<FieldT> &out,
-              const pb_variable<FieldT> &x) : 
-    gadget<FieldT>(pb, "poly_gadget"), out(out), x(x)
+  poly_gadget(protoboard<FieldT> &pb,
+              pb_variable<FieldT> &x) : 
+    gadget<FieldT>(pb, "poly_gadget"), x(x)
   {
     // Allocate variables to protoboard
     // The strings (like "x") are only for debugging purposes
 	  
+    out.allocate(this->pb, "out");
     sym_1.allocate(this->pb, "sym_1");
     y.allocate(this->pb, "y");
     sym_2.allocate(this->pb, "sym_2");
@@ -45,5 +45,6 @@ public:
     this->pb.val(sym_1) = this->pb.val(x) * this->pb.val(x);
     this->pb.val(y) = this->pb.val(sym_1) * this->pb.val(x);
     this->pb.val(sym_2) = this->pb.val(y) + this->pb.val(x);
+    this->pb.val(out) = this->pb.val(sym_2) + 5;
   }
 };
