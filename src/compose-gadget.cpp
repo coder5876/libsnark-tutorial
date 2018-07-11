@@ -10,6 +10,7 @@
 #include "util.hpp"
 
 using namespace libsnark;
+using namespace libff;
 using namespace std;
 
 int main()
@@ -23,29 +24,33 @@ int main()
   // Create protoboard
 
   protoboard<FieldT> pb;
-  pb_variable<FieldT> out;
-  pb_variable<FieldT> x;
+  pb_variable_array<FieldT> hash;
+  pb_variable_array<FieldT> x;
 
   // Allocate variables
 
-  out.allocate(pb, "out");
-  x.allocate(pb, "x");
+  hash.allocate(pb, 256, "hash");
+  x.allocate(pb, 256, "x");
 
   // This sets up the protoboard variables
   // so that the first one (out) represents the public
   // input and the rest is private input
 
-  pb.set_input_sizes(1);
+  pb.set_input_sizes(256);
 
   // Initialize gadget
 
-  test_gadget<FieldT> g(pb, out, x);
+  test_gadget<FieldT> g(pb, hash, x);
   g.generate_r1cs_constraints();
   
   // Add witness values
 
-  pb.val(out) = 35*35;
-  pb.val(x) = 3;
+  bit_vector hash_bv = int_list_to_bits({0x41193c30, 0x9b746571, 0xeaa92273, 0x226c16d0, 0x23050567, 0x67d2ca7e, 0xf0bf35e3, 0x90b1c262}, 32);
+  hash.fill_with_bits(pb, hash_bv);
+
+  bit_vector x_bv = int_list_to_bits({0x80000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000100}, 32);
+  x.fill_with_bits(pb, x_bv);
+  //pb.val(x) = 3;
 
   g.generate_r1cs_witness();
   
@@ -58,14 +63,15 @@ int main()
   bool verified = r1cs_ppzksnark_verifier_strong_IC<default_r1cs_ppzksnark_pp>(keypair.vk, pb.primary_input(), proof);
 
   cout << "Number of R1CS constraints: " << constraint_system.num_constraints() << endl;
-  cout << "Primary (public) input: " << pb.primary_input() << endl;
-  cout << "Auxiliary (private) input: " << pb.auxiliary_input() << endl;
+  cout << "PB satisfied: " << pb.is_satisfied() << endl;
+  //cout << "Primary (public) input: " << pb.primary_input() << endl;
   cout << "Verification status: " << verified << endl;
+  bit_vector h = hash.get_bits(pb);
 
   const r1cs_ppzksnark_verification_key<default_r1cs_ppzksnark_pp> vk = keypair.vk;
 
-  print_vk_to_file<default_r1cs_ppzksnark_pp>(vk, "../build/vk_data");
-  print_proof_to_file<default_r1cs_ppzksnark_pp>(proof, "../build/proof_data");
+  //print_vk_to_file<default_r1cs_ppzksnark_pp>(vk, "../build/vk_data");
+  //print_proof_to_file<default_r1cs_ppzksnark_pp>(proof, "../build/proof_data");
 
   return 0;
 }
