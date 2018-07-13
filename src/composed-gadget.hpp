@@ -9,6 +9,15 @@ using namespace std;
 
 const size_t sha_digest_len = 256;
 
+bool sha256_padding[256] = {1,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,1, 0,0,0,0,0,0,0,0};
+
 template<typename FieldT>
 class test_gadget : public gadget<FieldT> {
 private:
@@ -19,17 +28,17 @@ private:
 
   // sha gadget
 
-  shared_ptr<sha256_two_to_one_hash_gadget<FieldT>> sha;
+  shared_ptr<block_variable<FieldT>> h_block;
+  shared_ptr<sha256_compression_function_gadget<FieldT>> sha;
 
   // sha inputs
 
-  shared_ptr<digest_variable<FieldT>> left;
-  shared_ptr<digest_variable<FieldT>> right;
   shared_ptr<digest_variable<FieldT>> hash;
 
   //pb_variable<FieldT> poly_out;
 
-  bit_vector left_bv;
+  pb_variable<FieldT> zero;
+  pb_variable_array<FieldT> padding_var;
 public:
   pb_variable_array<FieldT> bits;
   pb_variable_array<FieldT> x;
@@ -39,16 +48,29 @@ public:
               pb_variable_array<FieldT> &x) : 
     gadget<FieldT>(pb, "gadget"), bits(bits), x(x)
   {
-    left_bv = int_list_to_bits({0x80000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000100}, 32);
-  
-    left.reset(new digest_variable<FieldT>(this->pb, sha_digest_len, "left"));
-    right.reset(new digest_variable<FieldT>(this->pb, sha_digest_len, "right"));
     hash.reset(new digest_variable<FieldT>(this->pb, sha_digest_len, "hash"));
 
     //bits.allocate(this->pb, sha_digest_len, "bits");
     
     //pack.reset(new packing_gadget<FieldT>(this->pb, this->bits, this->x, "pack"));
-    sha.reset(new sha256_two_to_one_hash_gadget<FieldT>(this->pb, *left, *right, *hash, "sha"));
+
+    zero.allocate(this->pb, FMT(this->annotation_prefix, "zero"));
+
+    for (size_t i = 0; i < 256; i++) {
+            if (sha256_padding[i])
+                padding_var.emplace_back(ONE);
+            else
+                padding_var.emplace_back(zero);
+    }
+
+    pb_linear_combination_array<FieldT> IV = SHA256_default_IV(this->pb);
+
+    h_block.reset(new block_variable<FieldT>(pb, {
+            this->x,
+            padding_var
+    }, "h_r1_block"));
+
+    sha.reset(new sha256_compression_function_gadget<FieldT>(this->pb, IV, h_block->bits, *hash, "sha"));
   }
 
   void generate_r1cs_constraints()
@@ -57,9 +79,9 @@ public:
 
   	//this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(x, 1, poly_out));
 
-    for(size_t i=0; i<x.size(); i++) {
+    /*for(size_t i=0; i<x.size(); i++) {
       this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(x[i], 1, right->bits[i]));
-    }
+    }*/
 
     sha->generate_r1cs_constraints();
 
@@ -71,8 +93,6 @@ public:
   void generate_r1cs_witness()
   {
     //pack->generate_r1cs_witness_from_packed();
-  	left->generate_r1cs_witness(left_bv);
-    right->generate_r1cs_witness(bits.get_bits(this->pb));
-    sha->generate_r1cs_witness();
+  	sha->generate_r1cs_witness();
   }
 };

@@ -45,10 +45,38 @@ int main()
   
   // Add witness values
 
-  bit_vector hash_bv = int_list_to_bits({0x41193c30, 0x9b746571, 0xeaa92273, 0x226c16d0, 0x23050567, 0x67d2ca7e, 0xf0bf35e3, 0x90b1c262}, 32);
+  bit_vector hash_bv = int_list_to_bits({78,152,
+  23,
+  135,
+  180,
+  61,
+  171,
+  123,
+  58,
+  147,
+  215,
+  200,
+  83,
+  7,
+  198,
+  244,
+  58,
+  26,
+  58,
+  88,
+  150,
+  57,
+  69,
+  185,
+  62,
+  165,
+  253,
+  53,
+  112,
+69, 80, 23}, 8);
   hash.fill_with_bits(pb, hash_bv);
 
-  bit_vector x_bv = int_list_to_bits({0x80000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000100}, 32);
+  bit_vector x_bv = int_list_to_bits({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 203, 6, 191, 16, 141, 210, 73, 136, 65, 136, 152, 60, 117, 24, 101, 18}, 8);
   x.fill_with_bits(pb, x_bv);
   //pb.val(x) = 3;
 
