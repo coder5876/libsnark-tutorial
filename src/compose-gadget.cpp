@@ -20,17 +20,17 @@ int main()
   default_r1cs_ppzksnark_pp::init_public_params();
 
   typedef libff::Fr<default_r1cs_ppzksnark_pp> FieldT;
-  
+
   // Create protoboard
 
   protoboard<FieldT> pb;
   pb_variable_array<FieldT> hash;
-  pb_variable_array<FieldT> x;
+  pb_variable<FieldT> x;
 
   // Allocate variables
 
   hash.allocate(pb, 256, "hash");
-  x.allocate(pb, 256, "x");
+  x.allocate(pb, "x");
 
   // This sets up the protoboard variables
   // so that the first one (out) represents the public
@@ -45,40 +45,10 @@ int main()
   
   // Add witness values
 
-  bit_vector hash_bv = int_list_to_bits({78,152,
-  23,
-  135,
-  180,
-  61,
-  171,
-  123,
-  58,
-  147,
-  215,
-  200,
-  83,
-  7,
-  198,
-  244,
-  58,
-  26,
-  58,
-  88,
-  150,
-  57,
-  69,
-  185,
-  62,
-  165,
-  253,
-  53,
-  112,
-69, 80, 23}, 8);
+  bit_vector hash_bv = int_list_to_bits({0x7fcf17c37d3415fb, 0xe6dbab0f0fd197d0, 0x328b5720e438b135, 0x46449179f5ab3e6c}, 64);
   hash.fill_with_bits(pb, hash_bv);
 
-  bit_vector x_bv = int_list_to_bits({0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 203, 6, 191, 16, 141, 210, 73, 136, 65, 136, 152, 60, 117, 24, 101, 18}, 8);
-  x.fill_with_bits(pb, x_bv);
-  //pb.val(x) = 3;
+  pb.val(x) = 3;
 
   g.generate_r1cs_witness();
   
@@ -94,7 +64,6 @@ int main()
   cout << "PB satisfied: " << pb.is_satisfied() << endl;
   //cout << "Primary (public) input: " << pb.primary_input() << endl;
   cout << "Verification status: " << verified << endl;
-  bit_vector h = hash.get_bits(pb);
 
   const r1cs_ppzksnark_verification_key<default_r1cs_ppzksnark_pp> vk = keypair.vk;
 
