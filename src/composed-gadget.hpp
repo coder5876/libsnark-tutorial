@@ -33,7 +33,8 @@ private:
 
   shared_ptr<digest_variable<FieldT>> hash;
 
-  pb_variable_array<FieldT> poly_out;
+  pb_variable<FieldT> poly_out;
+  pb_variable_array<FieldT> poly_out_array;
 
   pb_variable<FieldT> zero;
   pb_variable_array<FieldT> padding_var;
@@ -46,9 +47,11 @@ public:
               pb_variable<FieldT> &x) : 
     gadget<FieldT>(pb, "gadget"), out(out), x(x)
   {
-    poly.reset(new poly_gadget<FieldT>(this->pb, this->x));
+    poly_out.allocate(this->pb, "poly_out");
 
-    poly_out.allocate(this->pb, sha_digest_len, "poly_out");
+    poly.reset(new poly_gadget<FieldT>(this->pb, poly_out, this->x));
+
+    poly_out_array.allocate(this->pb, sha_digest_len, "poly_out_array");
 
     zero.allocate(this->pb, FMT(this->annotation_prefix, "zero"));
 
@@ -65,7 +68,7 @@ public:
     pb_linear_combination_array<FieldT> IV = SHA256_default_IV(this->pb);
 
     h_block.reset(new block_variable<FieldT>(this->pb, {
-            poly_out,
+            poly_out_array,
             padding_var
     }, "h_r1_block"));
 
@@ -82,13 +85,13 @@ public:
     // hacky packing stuff
 
     FieldT twoi = FieldT::one();
-     vector<linear_term<FieldT>> sum;
-    for(int i=poly_out.size()-1; i>=0; i--) {
-      sum.emplace_back(twoi * poly_out[i]);
+    vector<linear_term<FieldT>> sum;
+    for(int i=poly_out_array.size()-1; i>=0; i--) {
+      sum.emplace_back(twoi * poly_out_array[i]);
 
       twoi += twoi;
     }
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(linear_combination<FieldT>(sum), 1, poly->out));
+    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(linear_combination<FieldT>(sum), 1, this->poly_out));
 
     for(size_t i=0; i<out.size(); i++) {
       this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(out[i], 1, hash->bits[i]));
@@ -97,13 +100,17 @@ public:
 
   void generate_r1cs_witness()
   {
+    FieldT v = this->pb.val(x);
+
+    this->pb.val(poly_out) = v*v*v + v + 5;
+
     poly->generate_r1cs_witness();
     
     // fill poly_out with bits of poly->out
 
-    bigint<FieldT::num_limbs> o = this->pb.val(poly->out).as_bigint();
-    for(int i=0; i<poly_out.size(); i++) {
-      this->pb.val(poly_out[poly_out.size()-1-i]) = o.test_bit(i) ? FieldT::one() : FieldT::zero();
+    bigint<FieldT::num_limbs> o = this->pb.val(poly_out).as_bigint();
+    for(int i=0; i<poly_out_array.size(); i++) {
+      this->pb.val(poly_out_array[poly_out_array.size()-1-i]) = o.test_bit(i) ? FieldT::one() : FieldT::zero();
     }
 
     sha->generate_r1cs_witness();

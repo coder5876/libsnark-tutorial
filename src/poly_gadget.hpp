@@ -13,13 +13,13 @@ public:
   pb_variable<FieldT> x;
 
   poly_gadget(protoboard<FieldT> &pb,
+              pb_variable<FieldT> &out,
               pb_variable<FieldT> &x) : 
-    gadget<FieldT>(pb, "poly_gadget"), x(x)
+    gadget<FieldT>(pb, "poly_gadget"), out(out), x(x)
   {
     // Allocate variables to protoboard
     // The strings (like "x") are only for debugging purposes
 	  
-    out.allocate(this->pb, "out");
     sym_1.allocate(this->pb, "sym_1");
     y.allocate(this->pb, "y");
     sym_2.allocate(this->pb, "sym_2");
@@ -45,6 +45,5 @@ public:
     this->pb.val(sym_1) = this->pb.val(x) * this->pb.val(x);
     this->pb.val(y) = this->pb.val(sym_1) * this->pb.val(x);
     this->pb.val(sym_2) = this->pb.val(y) + this->pb.val(x);
-    this->pb.val(out) = this->pb.val(sym_2) + 5;
   }
 };
