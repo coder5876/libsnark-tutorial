@@ -190,6 +190,7 @@ contract Verifier {
             uint[2][2] gamma_beta_2,
             uint[2][2] Z,
             uint[2][] IC) public {
+    	require(!verifyingKeySet);
         require(IC.length <= 5);
         vk.A = Pairing.G2Point([A[0][0], A[0][1]], [A[1][0], A[1][1]]);
         vk.B = Pairing.G1Point(B[0], B[1]);
