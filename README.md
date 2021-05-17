@@ -52,6 +52,7 @@ In order to download and build the repo:
 ```
 git clone https://github.com/christianlundkvist/libsnark-tutorial.git
 cd libsnark-tutorial
+git submodule update --init --recursive
 mkdir build && cd build && cmake ..
 make
 ```
